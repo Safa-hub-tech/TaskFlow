@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Smart To-Do Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6)); }
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            min-width: 120px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4ade80;
+            display: block;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center; /* Align items vertically */
+        }
+
+        .task-input,
+        .priority-select,
+        .due-date-input { /* Added .due-date-input here */
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            min-width: 250px;
+        }
+
+        .task-input::placeholder,
+        .due-date-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .task-input:focus,
+        .priority-select:focus,
+        .due-date-input:focus { /* Added .due-date-input here */
+            outline: none;
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+            border-color: #4ade80;
+            transform: scale(1.02);
+        }
+
+        /* Specific styles for date input to match theme */
+        .due-date-input[type="date"] {
+            -webkit-appearance: none; /* Remove default date input styling */
+            appearance: none;
+            cursor: text; /* Make it look like an input, not a button */
+        }
+
+        .due-date-input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* Invert color for visibility on dark background */
+            cursor: pointer;
+        }
+
+        .priority-select option {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .add-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #4ade80, #22c55e);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(74, 222, 128, 0.4);
+        }
+
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(45deg, #4ade80, #22c55e);
+            color: white;
+            box-shadow: 0 5px 15px rgba(74, 222, 128, 0.3);
+        }
+
+        .tasks-container {
+            display: grid;
+            gap: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .tasks-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tasks-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .tasks-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: grab;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            background: rgba(74, 222, 128, 0.2);
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-text {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .priority-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-high {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 2px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .priority-medium {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+        }
+
+        .priority-low {
+            background: linear-gradient(45deg, #06b6d4, #0891b2);
+            color: white;
+            box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .task-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .complete-btn {
+            background: linear-gradient(45deg, #4ade80, #22c55e);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .task-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-timestamp {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .task-due-date { /* New style for due date */
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .task-due-date.overdue {
+            color: #ef4444; /* Red color for overdue tasks */
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-section {
+                flex-direction: column;
+            }
+            
+            .task-input, .priority-select, .due-date-input {
+                min-width: 100%;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .stat-card {
+                min-width: 100px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>TaskFlow</h1>
+            <p class="subtitle">Smart Task Management for Productive Lives</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalTasks">0</span>
+                    <span class="stat-label">Total Tasks</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="completedTasks">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="pendingTasks">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="completionRate">0%</span>
+                    <span class="stat-label">Success Rate</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <input type="text" class="task-input" id="taskInput" placeholder="What needs to be done? ✨">
+            <input type="date" class="due-date-input" id="dueDateInput" title="Set a due date"> <select class="priority-select" id="prioritySelect">
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
+            <button class="add-btn" onclick="addTask()">Add Task</button>
+        </div>
+
+        <div class="filter-tabs">
+            <button class="filter-tab active" onclick="filterTasks('all')">All Tasks</button>
+            <button class="filter-tab" onclick="filterTasks('pending')">Pending</button>
+            <button class="filter-tab" onclick="filterTasks('completed')">Completed</button>
+            <button class="filter-tab" onclick="filterTasks('high')">High Priority</button>
+            <button class="filter-tab" onclick="filterTasks('overdue')">Overdue</button> </div>
+
+        <div class="tasks-container" id="tasksContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h3>No tasks yet!</h3>
+                <p>Add your first task above to get started on your productivity journey.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tasks = [];
+        let currentFilter = 'all';
+        let draggedElement = null;
+
+        // Initialize particles
+        function createParticles() {
+            const particlesContainer = document.querySelector('.floating-particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 4 + 2 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Add task function
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const prioritySelect = document.getElementById('prioritySelect');
+            const dueDateInput = document.getElementById('dueDateInput'); // Get due date input
+            
+            if (taskInput.value.trim() === '') {
+                taskInput.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.5)';
+                setTimeout(() => {
+                    taskInput.style.boxShadow = '';
+                }, 1000);
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                text: taskInput.value.trim(),
+                priority: prioritySelect.value,
+                completed: false,
+                timestamp: new Date().toLocaleString(),
+                dueDate: dueDateInput.value // Store due date
+            };
+
+            tasks.unshift(task);
+            taskInput.value = '';
+            dueDateInput.value = ''; // Clear due date input
+            renderTasks();
+            updateStats();
+            
+            // Success animation
+            taskInput.style.boxShadow = '0 0 20px rgba(74, 222, 128, 0.5)';
+            setTimeout(() => {
+                taskInput.style.boxShadow = '';
+            }, 1000);
+        }
+
+        // Render tasks
+        function renderTasks() {
+            const container = document.getElementById('tasksContainer');
+            let filteredTasks = tasks;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of day for comparison
+
+            // Apply filters
+            if (currentFilter === 'pending') {
+                filteredTasks = tasks.filter(task => !task.completed);
+            } else if (currentFilter === 'completed') {
+                filteredTasks = tasks.filter(task => task.completed);
+            } else if (currentFilter === 'high') {
+                filteredTasks = tasks.filter(task => task.priority === 'high');
+            } else if (currentFilter === 'overdue') { // New filter for overdue tasks
+                filteredTasks = tasks.filter(task => 
+                    !task.completed && task.dueDate && new Date(task.dueDate) < today
+                );
+            }
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${getEmptyStateIcon()}</div>
+                        <h3>${getEmptyStateTitle()}</h3>
+                        <p>${getEmptyStateMessage()}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredTasks.map(task => {
+                const dueDateObj = task.dueDate ? new Date(task.dueDate) : null;
+                const isOverdue = dueDateObj && !task.completed && dueDateObj < today;
+                const formattedDueDate = dueDateObj ? `Due: ${dueDateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}` : '';
+
+                return `
+                <div class="task-item ${task.completed ? 'completed' : ''}" 
+                    draggable="true" 
+                    data-id="${task.id}"
+                    ondragstart="handleDragStart(event)"
+                    ondragend="handleDragEnd(event)">
+                    <div class="task-header">
+                        <div class="task-text">${task.text}</div>
+                        <div class="priority-badge priority-${task.priority}">${task.priority}</div>
+                    </div>
+                    ${task.dueDate ? `<div class="task-due-date ${isOverdue ? 'overdue' : ''}">${formattedDueDate}</div>` : ''}
+                    <div class="task-timestamp">Created: ${task.timestamp}</div>
+                    <div class="task-actions">
+                        <button class="task-btn complete-btn" onclick="toggleTask(${task.id})">
+                            ${task.completed ? 'Undo' : 'Complete'}
+                        </button>
+                        <button class="task-btn delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Helper functions for empty states
+        function getEmptyStateIcon() {
+            switch (currentFilter) {
+                case 'pending': return '⏳';
+                case 'completed': return '🎉';
+                case 'high': return '🔥';
+                case 'overdue': return '⏰'; // New icon for overdue
+                default: return '📝';
+            }
+        }
+
+        function getEmptyStateTitle() {
+            switch (currentFilter) {
+                case 'pending': return 'No pending tasks!';
+                case 'completed': return 'No completed tasks yet!';
+                case 'high': return 'No high priority tasks!';
+                case 'overdue': return 'No overdue tasks!'; // New title for overdue
+                default: return 'No tasks yet!';
+            }
+        }
+
+        function getEmptyStateMessage() {
+            switch (currentFilter) {
+                case 'pending': return 'Great job! All your tasks are completed.';
+                case 'completed': return 'Complete some tasks to see them here.';
+                case 'high': return 'No urgent tasks at the moment.';
+                case 'overdue': return 'All tasks are either completed or not yet due. Keep it up!'; // New message for overdue
+                default: return 'Add your first task above to get started on your productivity journey.';
+            }
+        }
+
+        // Toggle task completion
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        // Delete task
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+            updateStats();
+        }
+
+        // Filter tasks
+        function filterTasks(filter) {
+            currentFilter = filter;
+            
+            // Update active tab
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 'event.target' will be the clicked button
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Fallback if event is not directly from a click (e.g., initial load)
+                const defaultTab = document.querySelector(`.filter-tab[onclick="filterTasks('${filter}')"]`);
+                if (defaultTab) {
+                    defaultTab.classList.add('active');
+                }
+            }
+            
+            renderTasks();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const overdue = tasks.filter(task => !task.completed && task.dueDate && new Date(task.dueDate) < today).length;
+
+            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('pendingTasks').textContent = pending;
+            document.getElementById('completionRate').textContent = rate + '%';
+            // You might want to add a stat for overdue tasks if you like!
+        }
+
+        // Drag and drop functions
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        // Allow drop on container
+        document.getElementById('tasksContainer').addEventListener('dragover', function(e) {
+            e.preventDefault();
+        });
+
+        document.getElementById('tasksContainer').addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (draggedElement) {
+                // This logic needs to re-order the 'tasks' array, not just the DOM elements
+                // For a full drag-and-drop reordering, you'd modify the 'tasks' array
+                // based on the new positions and then call renderTasks() again.
+                // For simplicity here, we'll just re-append to the container.
+
+                const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
+                if (afterElement == null) {
+                    e.currentTarget.appendChild(draggedElement);
+                } else {
+                    e.currentTarget.insertBefore(draggedElement, afterElement);
+                }
+
+                // To truly persist drag-and-drop order:
+                // 1. Get ordered IDs from the DOM after drop.
+                // 2. Reconstruct the 'tasks' array based on this new order.
+                // 3. Call renderTasks() to ensure the data matches the UI.
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_NEGATIVE_INFINITY }).element;
+        }
+
+        // Enter key support
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            createParticles();
+            // Ensure the 'all' filter tab is active on initial load
+            filterTasks('all'); 
+            updateStats();
+        });
+    </script>
+</body>
+</html>
